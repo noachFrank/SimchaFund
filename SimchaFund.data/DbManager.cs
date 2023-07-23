@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -42,6 +43,7 @@ namespace SimchaFund.data
                 contributor.Balance = GetDepositsForTotal(contributor.Id);
                 contributor.Balance += GetWithdrawlsForTotal(contributor.Id);
             }
+
 
             return contributors;
         }
@@ -194,6 +196,143 @@ namespace SimchaFund.data
             connection.Open();
             command.ExecuteNonQuery();
         }
+
+        public void AddSimcha(SimchaForAdd s)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = connection.CreateCommand();
+            command.CommandText = @"INSERT INTO Simchas (Name, Date)
+                            VALUES (@name, @date)";
+            command.Parameters.AddWithValue("@name", s.Name);
+            command.Parameters.AddWithValue("@date", s.Date);
+            connection.Open();
+            command.ExecuteNonQuery();
+        }
+
+        public List<SimchaForDisplay> GetSimchas()
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = connection.CreateCommand();
+            command.CommandText = @"SELECT * FROM Simchas";
+            connection.Open();
+
+            var simchas = new List<SimchaForDisplay>();
+            var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                simchas.Add(new SimchaForDisplay
+                {
+                    Id = (int)reader["Id"],
+                    Name = (string)reader["name"],
+                    Date = (DateTime)reader["date"]
+                });
+            }
+            return simchas;
+
+        }
+
+        public int GetTotalDonors()
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = connection.CreateCommand();
+            command.CommandText = @"SELECT COUNT(FirstName) FROM Contributors";
+            connection.Open();
+
+            return (int)command.ExecuteScalar();
+        }
+
+        public int GetSimchaDonorCount(int id)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = connection.CreateCommand();
+            command.CommandText = @"SELECT COUNT(SimchaId) FROM Transactions
+                            WHERE SimchaId = @Id";
+            command.Parameters.AddWithValue("@Id", id);
+            connection.Open();
+
+            return (int)command.ExecuteScalar();
+        }
+
+        public int GetSimchaTotal(int id)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = connection.CreateCommand();
+            command.CommandText = @"SELECT * FROM Transactions
+                            WHERE SimchaId = @Id";
+            command.Parameters.AddWithValue("@Id", id);
+            connection.Open();
+            int total = 0;
+             var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                total += (int)reader["amount"];
+            }
+
+
+            return total;
+        }
+
+        public int GetContributorsForSimcha(int simchaId, int cId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = connection.CreateCommand();
+            command.CommandText = @"SELECT * FROM Contributors C
+                            JOIN Transactions T
+                            ON C.Id = T.ContributorId
+                            WHERE T.SimchaId = @simchaId AND c.Id = @cId";
+            command.Parameters.AddWithValue("@simchaId", simchaId);
+            command.Parameters.AddWithValue("@cId", cId);
+
+            connection.Open();
+            var reader = command.ExecuteReader();
+            if (!reader.Read())
+            {
+                return 0;
+            }
+            return (int)reader["amount"];
+        }
+
+        public void Donate(int simchaId, int contributorId, int amount)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = connection.CreateCommand();
+            command.CommandText = @"INSERT INTO Transactions (SimchaId, ContributorId, Amount, Date)
+                            VALUES (@simId, @conId, @amount, @date)";
+            command.Parameters.AddWithValue("@simId", simchaId);
+            command.Parameters.AddWithValue("@conId", contributorId);
+            command.Parameters.AddWithValue("@amount", amount * -1);
+            command.Parameters.AddWithValue("@date", DateTime.Today);
+
+            connection.Open();
+            command.ExecuteNonQuery();
+        }
+
+        public void DonateMany(List<Donations> donations, int simchaId)
+        {
+            DeleteContributors(simchaId);
+
+            foreach(Donations d in donations)
+            {
+                if (d.Include)
+                {
+                    Donate(simchaId, d.ContributorId, d.Amount);
+                }
+            }
+        }
+
+        public void DeleteContributors(int simchaId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = connection.CreateCommand();
+            command.CommandText = @"DELETE FROM Transactions 
+                                WHERE SimchaId = @Id";
+            command.Parameters.AddWithValue("@Id", simchaId);
+
+            connection.Open();
+            command.ExecuteNonQuery();
+
+        }
+
 
 
     }

@@ -7,5 +7,7 @@ namespace SimchaFund.web.Models
         public List<Contributor> Contributors { get; set; } 
 
         public string Message { get; set; }
+
+       
     }
 }

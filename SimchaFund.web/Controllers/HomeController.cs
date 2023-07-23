@@ -11,7 +11,22 @@ namespace SimchaFund.web.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            var manager = new DbManager(_connectionString);
+
+            var simchas = manager.GetSimchas();
+            foreach (var simcha in simchas)
+            {
+                simcha.Donors = manager.GetSimchaDonorCount(simcha.Id);
+                simcha.Donations = manager.GetSimchaTotal(simcha.Id);
+            }
+            var vm = new SimchaViewModel
+            {
+                Message = (string)TempData["message"],
+                TotalDonors = manager.GetTotalDonors(),
+                Simchas = simchas
+            };
+
+            return View(vm);
         }
 
         public IActionResult Contributors()
@@ -81,6 +96,47 @@ namespace SimchaFund.web.Controllers
 
             return View(vm);
 
+        }
+
+        [HttpPost]
+        public IActionResult NewSimcha(SimchaForAdd s)
+        {
+            var manager = new DbManager(_connectionString);
+            manager.AddSimcha(s);
+
+            TempData["message"] = "New Simcha Added";
+            return Redirect("/");
+        }
+
+        public IActionResult Donate(int simchaId, string simchaName)
+        {
+            var manager = new DbManager(_connectionString);
+            var vm = new SimchaContributorViewModel
+            {
+                Contributors = manager.GetContributors(),
+                SimchaName = simchaName,
+                SimchaId = simchaId
+            };
+
+            foreach(Contributor c in vm.Contributors)
+            {
+                c.Donated = manager.GetContributorsForSimcha(simchaId, c.Id) != 0;
+                if (c.Donated)
+                {
+                    c.DonationAmount = manager.GetContributorsForSimcha(simchaId, c.Id);
+                }
+            }
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult UpdateContributions(int simchaId,List<Donations> contributors)
+        {
+            var manager = new DbManager(_connectionString);
+            manager.DonateMany(contributors, simchaId);
+
+            return Redirect("/");
         }
 
     }

@@ -16,5 +16,9 @@
 
         public DateTime Date { get; set; }
 
+        public int DonationAmount { get; set; }
+
+        public bool Donated { get; set; }
+
     }
 }
