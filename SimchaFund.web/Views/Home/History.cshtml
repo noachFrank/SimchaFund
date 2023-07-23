@@ -1,0 +1,53 @@
+﻿@using SimchaFund.data
+
+@model HistoryViewModel
+
+<div class="header">
+    <h1>History for @Model.Name</h1>
+    <h3>Current Balance: @Model.Balance.ToString("c")</h3>
+</div>
+
+<div class="row header">
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Action</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var history in Model.History)
+                {
+                    <tr>
+                        
+                            @if(!string.IsNullOrEmpty(history.Name)){
+                            <td>
+                                @history.Name
+                            </td>
+                            }
+                            else{
+                            <td>
+                                Deposit
+                            </td>
+                            }
+                        
+                        <td style="text-align: center; vertical-align: middle;">
+                           @history.Date
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                           @history.Amount.ToString("c")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div style="text-align:center">
+    <div style="text-align:center;">
+        <a class="btn btn-lg btn-danger" href="/home/contributors">Back to Contributors</a>
+    </div>
+</div>
