@@ -1,4 +1,4 @@
-﻿@using SimchaFund.data
+@using SimchaFund.data
 
 @model HistoryViewModel
 
@@ -21,23 +21,14 @@
                 @foreach (var history in Model.History)
                 {
                     <tr>
-                        
-                            @if(!string.IsNullOrEmpty(history.Name)){
-                            <td>
-                                @history.Name
-                            </td>
-                            }
-                            else{
-                            <td>
-                                Deposit
-                            </td>
-                            }
-                        
-                        <td style="text-align: center; vertical-align: middle;">
-                           @history.Date.ToShortDateString()
+                        <td>
+                            @(!string.IsNullOrEmpty(history.Name) ? @history.Name : "Deposit")
                         </td>
                         <td style="text-align: center; vertical-align: middle;">
-                           @history.Amount.ToString("c")
+                            @history.Date.ToShortDateString()
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            @history.Amount.ToString("C")
                         </td>
                     </tr>
                 }
