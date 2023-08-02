@@ -31,7 +31,6 @@
             <th>Name</th>
             <th>Cell</th>
             <th>Balance</th>
-            <th>Always Include</th>
             <th>Actions</th>
         </tr>
         @foreach (var contibutor in Model.Contributors)
@@ -46,12 +45,6 @@
                 </td>
                 <td>
                     @contibutor.Balance.ToString("c")
-                </td>
-                <td style="text-align: center;">
-                    @if(contibutor.AlwaysInclude)
-                    {
-                    <i style="font-size:30px" class="bi bi-check"></i>
-                    }
                 </td>
                 <td>
                     <a href="/home/history?id=@contibutor.Id" class="btn btn-primary">Show History</a>
